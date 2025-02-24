@@ -21,7 +21,7 @@ A Python proxy service that converts documents to PDF using Gotenberg. Provide a
 pip install -r requirements.txt
 ```
 
-2. Make sure Gotenberg is running: https://gotenberg.dev/docs/getting-started/installation
+2. Make sure Gotenberg is running (see [Gotenberg docs](https://gotenberg.dev/docs/getting-started/installation)).
 
 3. Start the proxy server:
 
