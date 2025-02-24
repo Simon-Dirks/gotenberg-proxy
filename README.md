@@ -18,10 +18,7 @@ docker compose up -d --build
 
 ## Configuration
 
-Environment variables:
-
-- `CACHE_MAX_AGE_MINUTES`: How long to cache PDFs (default: 60)
-- `GOTENBERG_HOST`: URL of Gotenberg service (default: http://localhost:3000)
+Configuration is done through environment variables. Create a `.env` file or set them directly.
 
 ## Usage
 
@@ -56,10 +53,4 @@ Converted PDFs are cached using the source URL as a key. Cached files:
 - Expire after a configurable time period (default: 60 minutes)
 - Are automatically regenerated when expired
 
-Configure cache expiry using the `CACHE_MAX_AGE_MINUTES` environment variable:
-
-```bash
-CACHE_MAX_AGE_MINUTES=120 flask run  # Set cache expiry to 2 hours
-```
-
-Converted PDFs are cached in the `pdf_cache` directory to improve performance for repeated requests.
+The cache is stored in a Docker volume named `pdf_cache` for persistence between container restarts.
