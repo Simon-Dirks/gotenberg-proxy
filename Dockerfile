@@ -7,7 +7,4 @@ RUN pip install -r requirements.txt
 
 COPY . .
 
-ENV FLASK_APP=app.py
-ENV FLASK_DEBUG=0
-
-CMD flask run --host=0.0.0.0 --port ${PORT:-5000}
+CMD gunicorn --bind 0.0.0.0:${PORT:-5000} app:app
