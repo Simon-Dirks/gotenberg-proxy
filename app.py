@@ -5,7 +5,6 @@ from flask import Flask, request, send_file
 from gotenberg_client import GotenbergClient
 import requests
 import tempfile
-import magic
 import logging
 from pathlib import Path
 
