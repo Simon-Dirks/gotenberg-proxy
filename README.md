@@ -24,7 +24,7 @@ pip install -r requirements.txt
 2. Make sure Gotenberg is running:
 
 ```bash
-docker run --rm -p 3000:3000 gotenberg/gotenberg:7
+docker run --rm -p 3000:3000 gotenberg/gotenberg:8
 ```
 
 3. Start the proxy server:
