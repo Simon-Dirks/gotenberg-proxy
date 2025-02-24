@@ -1,0 +1,22 @@
+version: "3.8"
+
+services:
+  proxy:
+    build: .
+    ports:
+      - "5000:5000"
+    environment:
+      - CACHE_MAX_AGE_MINUTES=60
+      - GOTENBERG_HOST=http://gotenberg:3000
+    volumes:
+      - pdf_cache:/app/pdf_cache
+    depends_on:
+      - gotenberg
+
+  gotenberg:
+    image: gotenberg/gotenberg:8
+    environment:
+      - CHROMIUM_DISABLE_ROUTES=1
+
+volumes:
+  pdf_cache:

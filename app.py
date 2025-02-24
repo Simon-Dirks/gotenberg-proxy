@@ -18,7 +18,9 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # Initialize Gotenberg client
-gotenberg = GotenbergClient('http://localhost:3000')
+GOTENBERG_HOST = os.getenv('GOTENBERG_HOST', 'http://localhost:3000')
+gotenberg = GotenbergClient(GOTENBERG_HOST)
+logger.info(f"Connecting to Gotenberg at: {GOTENBERG_HOST}")
 
 # Cache configuration
 CACHE_DIR = Path('pdf_cache')
