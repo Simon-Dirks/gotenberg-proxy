@@ -60,5 +60,13 @@ curl -X POST http://localhost:5000/convert \
 
 ## Caching
 
-Converted PDFs are cached using the source URL as a key. Cached files are only accessible through the `/convert` endpoint.
+Converted PDFs are cached using the source URL as a key. Cached files:
+- Are only accessible through the `/convert` endpoint
+- Expire after a configurable time period (default: 60 minutes)
+- Are automatically regenerated when expired
+
+Configure cache expiry using the `CACHE_MAX_AGE_MINUTES` environment variable:
+```bash
+CACHE_MAX_AGE_MINUTES=120 flask run  # Set cache expiry to 2 hours
+```
 Converted PDFs are cached in the `pdf_cache` directory to improve performance for repeated requests.

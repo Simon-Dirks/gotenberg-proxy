@@ -1,5 +1,6 @@
 import os
 import hashlib
+import time
 from flask import Flask, request, send_file
 from gotenberg_client import GotenbergClient
 import requests
@@ -20,9 +21,21 @@ logger = logging.getLogger(__name__)
 # Initialize Gotenberg client
 gotenberg = GotenbergClient('http://localhost:3000')
 
-# Create cache directory
+# Cache configuration
 CACHE_DIR = Path('pdf_cache')
 CACHE_DIR.mkdir(exist_ok=True)
+CACHE_MAX_AGE_MINUTES = int(os.getenv('CACHE_MAX_AGE_MINUTES', '60'))
+CACHE_MAX_AGE = CACHE_MAX_AGE_MINUTES * 60  # Convert to seconds
+
+logger.info(f"Cache directory: {CACHE_DIR.absolute()}")
+logger.info(f"Cache expiry: {CACHE_MAX_AGE_MINUTES} minutes")
+
+def is_cache_valid(cache_path: Path) -> bool:
+    """Check if cached file is still valid based on its age."""
+    if not cache_path.exists():
+        return False
+    file_age = time.time() - cache_path.stat().st_mtime
+    return file_age < CACHE_MAX_AGE
 
 def get_cache_path(url):
     """Generate a unique cache path for a given URL."""
@@ -54,10 +67,13 @@ def download_file(url):
     filename = clean_filename(parsed_url.path)
     logger.debug(f"Using filename: {filename} from URL: {url}")
     
-    # Save to temporary file
-    with tempfile.NamedTemporaryFile(delete=False, prefix=filename) as temp_file:
-        temp_file.write(response.content)
-        return temp_file.name
+    # Create a temporary file with the correct name
+    temp_dir = Path(tempfile.gettempdir())
+    temp_path = temp_dir / filename
+    
+    with open(temp_path, 'wb') as f:
+        f.write(response.content)
+    return str(temp_path)
 
 @app.route('/convert', methods=['POST'])
 def convert_to_pdf():
@@ -72,10 +88,13 @@ def convert_to_pdf():
         cache_path = get_cache_path(url)
         logger.debug(f"Cache path for URL: {cache_path}")
         
-        # Check if PDF is already cached
-        if cache_path.exists():
+        # Check if PDF is cached and still valid
+        if is_cache_valid(cache_path):
             logger.info(f"Serving cached PDF for URL: {url}")
             return send_file(cache_path, mimetype='application/pdf')
+        elif cache_path.exists():
+            logger.info(f"Cache expired for URL: {url}, reconverting")
+            cache_path.unlink()
 
         # Download and convert the file
         logger.debug(f"Downloading file from URL: {url}")
@@ -98,7 +117,10 @@ def convert_to_pdf():
 
         finally:
             # Clean up temporary file
-            os.unlink(input_file_path)
+            try:
+                Path(input_file_path).unlink(missing_ok=True)
+            except Exception as e:
+                logger.warning(f"Failed to clean up temporary file {input_file_path}: {e}")
 
     except requests.exceptions.RequestException as e:
         logger.error(f"Error downloading file: {str(e)}", exc_info=True)
