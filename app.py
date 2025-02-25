@@ -76,9 +76,9 @@ def download_file(url):
         f.write(response.content)
     return str(temp_path)
 
-@app.route('/convert', methods=['POST'])
+@app.route('/convert', methods=['GET'])
 def convert_to_pdf():
-    url = request.json.get('url')
+    url = request.args.get('url')
     logger.debug(f"Received conversion request for URL: {url}")
     
     if not url:
