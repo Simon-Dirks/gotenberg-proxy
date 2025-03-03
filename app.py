@@ -2,6 +2,7 @@ import os
 import hashlib
 import time
 from flask import Flask, request, send_file
+from flask_cors import CORS
 from gotenberg_client import GotenbergClient
 import requests
 import tempfile
@@ -9,6 +10,7 @@ import logging
 from pathlib import Path
 
 app = Flask(__name__)
+CORS(app)
 
 # Configure logging
 logging.basicConfig(
