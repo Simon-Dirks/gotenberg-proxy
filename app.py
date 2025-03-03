@@ -132,6 +132,7 @@ def convert_to_pdf():
         finally:
             # Clean up temporary file
             try:
+                logger.info(f"Cleaning up temporary file {input_file_path}")
                 Path(input_file_path).unlink(missing_ok=True)
             except Exception as e:
                 logger.warning(f"Failed to clean up temporary file {input_file_path}: {e}")
