@@ -45,10 +45,8 @@ def clean_url(url: str) -> str:
     return url.split('?')[0]
 
 def get_cache_path(url):
-    """Generate a unique cache path for a given URL.
-    Uses cleaned URL (without query parameters) for caching."""
-    cleaned_url = clean_url(url)
-    url_hash = hashlib.sha256(cleaned_url.encode()).hexdigest()
+    """Generate a unique cache path for a given URL."""
+    url_hash = hashlib.sha256(url.encode()).hexdigest()
     return CACHE_DIR / f"{url_hash}.pdf"
 
 def clean_filename(url_path: str, max_length: int = 50) -> str:
