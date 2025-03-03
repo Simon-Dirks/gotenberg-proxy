@@ -25,17 +25,21 @@ gotenberg = GotenbergClient(GOTENBERG_HOST)
 logger.info(f"Connecting to Gotenberg at: {GOTENBERG_HOST}")
 
 # Cache configuration
+ENABLE_CACHE = bool(int(os.getenv('ENABLE_CACHE', '0')))
 CACHE_DIR = Path('pdf_cache')
-CACHE_DIR.mkdir(exist_ok=True)
+if ENABLE_CACHE:
+    CACHE_DIR.mkdir(exist_ok=True)
 CACHE_MAX_AGE_MINUTES = int(os.getenv('CACHE_MAX_AGE_MINUTES', '60'))
 CACHE_MAX_AGE = CACHE_MAX_AGE_MINUTES * 60  # Convert to seconds
 
-logger.info(f"Cache directory: {CACHE_DIR.absolute()}")
-logger.info(f"Cache expiry: {CACHE_MAX_AGE_MINUTES} minutes")
+logger.info(f"Cache enabled: {ENABLE_CACHE}")
+if ENABLE_CACHE:
+    logger.info(f"Cache directory: {CACHE_DIR.absolute()}")
+    logger.info(f"Cache expiry: {CACHE_MAX_AGE_MINUTES} minutes")
 
 def is_cache_valid(cache_path: Path) -> bool:
     """Check if cached file is still valid based on its age."""
-    if not cache_path.exists():
+    if not ENABLE_CACHE or not cache_path.exists():
         return False
     file_age = time.time() - cache_path.stat().st_mtime
     return file_age < CACHE_MAX_AGE
@@ -91,33 +95,19 @@ def convert_to_pdf():
         logger.warning("No URL provided in request")
         return {'error': 'URL is required'}, 400
 
-    # Check if URL already points to a PDF
-    # cleaned_name = clean_filename(url)
-    # logger.debug(f"Cleaned filename: {cleaned_name} from URL: {url}")
-    
-    # if cleaned_name.lower().endswith('.pdf'):
-    #     logger.info(f"URL already points to a PDF, downloading directly: {url}")
-    #     try:
-    #         logger.debug(f"Starting direct PDF download for URL: {url}")
-    #         input_file_path = download_file(url)
-    #         logger.debug(f"PDF downloaded successfully to: {input_file_path}")
-    #         return send_file(input_file_path, mimetype='application/pdf')
-    #     except Exception as e:
-    #         logger.error(f"Error downloading PDF: {str(e)}", exc_info=True)
-    #         logger.debug(f"Exception type: {type(e).__name__}, details: {str(e)}")
-    #         return {'error': f'Failed to download PDF: {str(e)}'}, 400
-
     try:
-        cache_path = get_cache_path(url)
-        logger.debug(f"Cache path for URL: {cache_path}")
-        
-        # Check if PDF is cached and still valid
-        if is_cache_valid(cache_path):
-            logger.info(f"Serving cached PDF for URL: {url}")
-            return send_file(cache_path, mimetype='application/pdf')
-        elif cache_path.exists():
-            logger.info(f"Cache expired for URL: {url}, reconverting")
-            cache_path.unlink()
+        # Handle caching if enabled
+        if ENABLE_CACHE:
+            cache_path = get_cache_path(url)
+            logger.debug(f"Cache path for URL: {cache_path}")
+            
+            # Check if PDF is cached and still valid
+            if is_cache_valid(cache_path):
+                logger.info(f"Serving cached PDF for URL: {url}")
+                return send_file(cache_path, mimetype='application/pdf')
+            elif cache_path.exists():
+                logger.info(f"Cache expired for URL: {url}, reconverting")
+                cache_path.unlink()
 
         # Download and convert the file
         logger.debug(f"Downloading file from URL: {url}")
@@ -134,10 +124,11 @@ def convert_to_pdf():
             response = route.convert(Path(input_file_path)).run()
             
             # Save the converted PDF
-            response.to_file(cache_path)
-            logger.info(f"Saved converted PDF to {cache_path}")
-            return send_file(cache_path, mimetype='application/pdf')
+            output_path = cache_path if ENABLE_CACHE else Path(tempfile.gettempdir()) / f"converted_{int(time.time())}.pdf"
+            response.to_file(output_path)
+            logger.info(f"Saved {'cached' if ENABLE_CACHE else 'temporary'} PDF to {output_path}")
 
+            return send_file(output_path, mimetype='application/pdf')
         finally:
             # Clean up temporary file
             try:

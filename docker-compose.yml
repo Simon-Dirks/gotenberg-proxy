@@ -5,6 +5,7 @@ services:
       - "${PROXY_PORT:-5000}:${PROXY_PORT:-5000}"
     environment:
       - CACHE_MAX_AGE_MINUTES=${CACHE_MAX_AGE_MINUTES:-60}
+      - ENABLE_CACHE=${ENABLE_CACHE:-0}
       - GOTENBERG_HOST=http://gotenberg:3000
       - PORT=${PROXY_PORT:-5000}
     volumes:
