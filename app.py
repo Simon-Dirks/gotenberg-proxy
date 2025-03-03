@@ -40,15 +40,21 @@ def is_cache_valid(cache_path: Path) -> bool:
     file_age = time.time() - cache_path.stat().st_mtime
     return file_age < CACHE_MAX_AGE
 
+def clean_url(url: str) -> str:
+    """Remove query parameters from URL."""
+    return url.split('?')[0]
+
 def get_cache_path(url):
-    """Generate a unique cache path for a given URL."""
-    url_hash = hashlib.sha256(url.encode()).hexdigest()
+    """Generate a unique cache path for a given URL.
+    Uses cleaned URL (without query parameters) for caching."""
+    cleaned_url = clean_url(url)
+    url_hash = hashlib.sha256(cleaned_url.encode()).hexdigest()
     return CACHE_DIR / f"{url_hash}.pdf"
 
 def clean_filename(url_path: str, max_length: int = 50) -> str:
     """Clean filename from URL path by removing query parameters and limiting length."""
     # Remove query parameters
-    filename = url_path.split('?')[0]
+    filename = clean_url(url_path)
     # Get basename in case of path
     filename = os.path.basename(filename)
     # Remove special characters except for extension
