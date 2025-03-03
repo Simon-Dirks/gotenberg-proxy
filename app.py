@@ -93,6 +93,17 @@ def convert_to_pdf():
         logger.warning("No URL provided in request")
         return {'error': 'URL is required'}, 400
 
+    # Check if URL already points to a PDF
+    cleaned_name = clean_filename(url)
+    if cleaned_name.lower().endswith('.pdf'):
+        logger.info(f"URL already points to a PDF, downloading directly: {url}")
+        try:
+            input_file_path = download_file(url)
+            return send_file(input_file_path, mimetype='application/pdf')
+        except Exception as e:
+            logger.error(f"Error downloading PDF: {str(e)}", exc_info=True)
+            return {'error': f'Failed to download PDF: {str(e)}'}, 400
+
     try:
         cache_path = get_cache_path(url)
         logger.debug(f"Cache path for URL: {cache_path}")
