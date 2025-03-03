@@ -95,13 +95,18 @@ def convert_to_pdf():
 
     # Check if URL already points to a PDF
     cleaned_name = clean_filename(url)
+    logger.debug(f"Cleaned filename: {cleaned_name} from URL: {url}")
+    
     if cleaned_name.lower().endswith('.pdf'):
         logger.info(f"URL already points to a PDF, downloading directly: {url}")
         try:
+            logger.debug(f"Starting direct PDF download for URL: {url}")
             input_file_path = download_file(url)
+            logger.debug(f"PDF downloaded successfully to: {input_file_path}")
             return send_file(input_file_path, mimetype='application/pdf')
         except Exception as e:
             logger.error(f"Error downloading PDF: {str(e)}", exc_info=True)
+            logger.debug(f"Exception type: {type(e).__name__}, details: {str(e)}")
             return {'error': f'Failed to download PDF: {str(e)}'}, 400
 
     try:
