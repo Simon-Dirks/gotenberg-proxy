@@ -41,10 +41,18 @@ if ENABLE_CACHE:
 
 def is_cache_valid(cache_path: Path) -> bool:
     """Check if cached file is still valid based on its age."""
-    if not ENABLE_CACHE or not cache_path.exists():
+    if not ENABLE_CACHE:
+        logger.debug(f"Cache check skipped - caching disabled")
         return False
+    if not cache_path.exists():
+        logger.debug(f"Cache check failed - file does not exist: {cache_path}")
+        return False
+    
     file_age = time.time() - cache_path.stat().st_mtime
-    return file_age < CACHE_MAX_AGE
+    is_valid = file_age < CACHE_MAX_AGE
+    
+    logger.debug(f"Cache validity check for {cache_path.name}: age={int(file_age)}s, max_age={CACHE_MAX_AGE}s, valid={is_valid}")
+    return is_valid
 
 def clean_url(url: str) -> str:
     """Remove query parameters from URL."""
