@@ -12,6 +12,8 @@ from pathlib import Path
 app = Flask(__name__)
 CORS(app)
 
+app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB
+
 # Configure logging
 logging.basicConfig(
     level=logging.DEBUG,
