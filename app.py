@@ -8,6 +8,7 @@ import requests
 import tempfile
 import logging
 from pathlib import Path
+from io import BytesIO
 
 app = Flask(__name__)
 CORS(app)
@@ -73,10 +74,20 @@ def clean_filename(url_path: str, max_length: int = 50) -> str:
 def send_pdf_file(file_path, prefix="converted"):
     """Helper function to send PDF files."""
     filename = f"{prefix}_{int(time.time())}.pdf"
+    
+    # Read using BytesIO to prevent partial transfer issues (NS_ERROR_NET_PARTIAL_TRANSFER and/or ERR_CONTENT_LENGTH_MISMATCH)
+    file_size = Path(file_path).stat().st_size
+    logger.debug(f"Sending file {file_path} with size {file_size} bytes")
+    
+    with open(file_path, 'rb') as f:
+        file_data = BytesIO(f.read())
+    
+    file_data.seek(0)
+    
     return send_file(
-        file_path,
+        file_data,
         mimetype='application/pdf',
-        as_attachment=True,
+        as_attachment=False,
         download_name=filename,
         conditional=True,
         etag=True
