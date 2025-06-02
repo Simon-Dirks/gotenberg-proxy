@@ -67,6 +67,19 @@ def clean_filename(url_path: str, max_length: int = 50) -> str:
         name = name[:max_length]
     return name + ext
 
+
+def send_pdf_file(file_path, prefix="converted"):
+    """Helper function to send PDF files."""
+    filename = f"{prefix}_{int(time.time())}.pdf"
+    return send_file(
+        file_path,
+        mimetype='application/pdf',
+        as_attachment=True,
+        download_name=filename,
+        conditional=True,
+        etag=True
+    )
+
 def download_file(url):
     """Download a file from URL and return its path."""
     response = requests.get(url)
@@ -104,7 +117,7 @@ def convert_to_pdf():
             # Check if PDF is cached and still valid
             if is_cache_valid(cache_path):
                 logger.info(f"Serving cached PDF for URL: {url}")
-                return send_file(cache_path, mimetype='application/pdf')
+                return send_pdf_file(cache_path, prefix="cached")
             elif cache_path.exists():
                 logger.info(f"Cache expired for URL: {url}, reconverting")
                 cache_path.unlink()
@@ -128,7 +141,7 @@ def convert_to_pdf():
             response.to_file(output_path)
             logger.info(f"Saved {'cached' if ENABLE_CACHE else 'temporary'} PDF to {output_path}")
 
-            return send_file(output_path, mimetype='application/pdf')
+            return send_pdf_file(output_path, prefix="converted")
         finally:
             # Clean up temporary file
             try:
